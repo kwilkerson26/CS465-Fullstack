@@ -16,7 +16,7 @@ app.set('views', path.join(__dirname, 'app_server', 'views'));
 
 
 //handlebars partial
-handlebars.registerPartials(__dirname+ '/app_server/views/partials');
+handlebars.registerPartials(path.join(__dirname+ '/app_server/views/partials'));
 
 app.set('view engine', 'hbs');
 
