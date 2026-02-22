@@ -6,54 +6,63 @@ import { TripDataService } from '../services/trip-data.service';
 import { Trip } from '../models/trip';
 
 import { Router } from '@angular/router';
+import { AuthenticationService } from '../services/authentication.service';
 
 @Component({
   selector: 'app-trip-listing',
   standalone: true,
   imports: [CommonModule, TripCardComponent],
   templateUrl: './trip-listing.component.html',
-  styleUrl: './trip-listing.component.css',
+  styleUrls: ['./trip-listing.component.css'],
   providers: [TripDataService]
 })
-
 export class TripListingComponent implements OnInit {
 
-  trips!: Trip[];
+  trips: Trip[] = [];
   message: string = '';
 
   constructor(
     private tripDataService: TripDataService,
-    private router: Router
-    ) {
-    console.log('trip-listing constructor');
+    private router: Router,
+    private authenticationService: AuthenticationService
+  ) {
+    console.log('TripListingComponent constructor');
   }
 
+  // Check if user is logged in
+  public isLoggedIn(): boolean {
+    return this.authenticationService.isLoggedIn();
+  }
+
+  // Navigate to Add Trip page if logged in
   public addTrip(): void {
-    this.router.navigate(['add-trip']);
+    if (this.isLoggedIn()) {
+      this.router.navigate(['add-trip']);
+    } else {
+      console.log('User must be logged in to add a trip.');
+    }
   }
 
-  private getStuff(): void {
+  // Fetch trips from the backend service
+  private loadTrips(): void {
     this.tripDataService.getTrips()
       .subscribe({
-        next: (value: Trip[]) => {
-          this.trips = value;
-          if(value.length > 0) 
-          {
-            this.message = 'There are ' + value.length + ' trips available.';
-          }
-          else {
-            this.message = 'There were no trips retrieved from the database';
-          }
+        next: (trips: Trip[]) => {
+          this.trips = trips;
+          this.message = trips.length > 0
+            ? `There are ${trips.length} trips available.`
+            : 'There were no trips retrieved from the database.';
           console.log(this.message);
         },
-        error: (error: any) => {
-          console.log('Error: ' + error);
+        error: (err: any) => {
+          console.error('Error fetching trips:', err);
+          this.message = 'Failed to retrieve trips from the database.';
         }
-      })
+      });
   }
 
   ngOnInit(): void {
-    console.log('ngOnInit');
-    this.getStuff();
+    console.log('TripListingComponent ngOnInit');
+    this.loadTrips();
   }
 }
