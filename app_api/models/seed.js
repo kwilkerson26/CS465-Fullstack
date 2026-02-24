@@ -4,34 +4,40 @@ const mongoose = require('./db');
 // Import the mongoose model for trips
 const Trip = require('./travlr');
 
-// Import the file system module to read JSON data
-const fs = require('fs');
+// Import the file system module (promises API)
+const fs = require('fs').promises;
 
-// Read and parse the trips data from the JSON file
-const trips = JSON.parse(
-  fs.readFileSync('./data/trips.json', 'utf8')
-);
-
-// Log the number of trips in the JSON file
-console.log('Trips to insert:', trips.length);
-
-// Seed function to populate the database
 const seedDB = async () => {
-    // Delete all existing trips in the collection
-  console.log('Deleting existing trips...');
-  const del = await Trip.deleteMany({});
-  // Log how many documents were deleted
-  console.log('Deleted:', del.deletedCount);
+  try {
+    // Read trips JSON file asynchronously
+    const fileData = await fs.readFile('./data/trips.json', 'utf8');
+    const trips = JSON.parse(fileData);
 
-    // Insert the new trips from the JSON file
-  console.log('Inserting trips...');
-  const inserted = await Trip.insertMany(trips);
-  // Log how many trips were added
-  console.log('Inserted:', inserted.length);
+    console.log('Trips to insert:', trips.length);
+
+    // Delete all existing trips
+    console.log('Deleting existing trips...');
+    const del = await Trip.deleteMany({});
+    console.log('Deleted:', del.deletedCount);
+
+    // Insert new trips
+    console.log('Inserting trips...');
+    const inserted = await Trip.insertMany(trips);
+    console.log('Inserted:', inserted.length);
+
+    // Close database connection
+    await mongoose.connection.close();
+    console.log('Database connection closed.');
+
+    process.exit(0);
+  } catch (err) {
+    console.error('Seeding error:', err);
+
+    // Ensure DB connection closes on error
+    await mongoose.connection.close();
+    process.exit(1);
+  }
 };
 
-// Run the seed function, then close the database connection
-seedDB().then(async () => {
-  await mongoose.connection.close();
-  process.exit(0);
-});
+// Run the seed function
+seedDB();

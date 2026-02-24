@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 
 import { TripDataService } from '../services/trip-data.service';
 import { Trip } from '../models/trip';
@@ -39,9 +39,14 @@ export class EditTripComponent implements OnInit {
     private tripDataService: TripDataService
   ) {}
 
+  // Custom validator enforcing uppercase alphanumeric pattern
+  uppercaseAlphanumeric(control: AbstractControl): ValidationErrors | null {
+    const pattern = /^[A-Z0-9]+$/;
+    if (!control.value) return null;
+    return pattern.test(control.value) ? null : { uppercaseAlphanumeric: true };
+  }
+
   // ngOnInit runs automatically when the component loads
-  // This is where we retrieve the trip ID, build the form,
-  // and fetch the existing trip record
   ngOnInit(): void {
 
     // Retrieve previously stored tripCode from localStorage
@@ -60,7 +65,7 @@ export class EditTripComponent implements OnInit {
     // Build the reactive form and apply required validators
     this.editForm = this.formBuilder.group({
       _id: [], // MongoDB document ID
-      code: [tripCode, Validators.required],
+      code: [tripCode, [Validators.required, this.uppercaseAlphanumeric]],
       name: ['', Validators.required],
       length: ['', Validators.required],
       start: ['', Validators.required],
@@ -73,32 +78,38 @@ export class EditTripComponent implements OnInit {
     // Call service to retrieve existing trip record from backend
     this.tripDataService.getTrip(tripCode)
       .subscribe({
-        next: (value: any) => {
+        next: (value: Trip | null) => {
+
+          if (!value) {
+            this.message = 'No Trip Retrieved!';
+            return;
+          }
+
+          // Normalize date format for HTML date input
+          const formattedTrip = {
+            ...value,
+            start: value.start
+              ? new Date(value.start).toISOString().slice(0, 10)
+              : ''
+          };
 
           // Store returned trip data
           this.trip = value;
 
           // Populate form fields with retrieved data
-          this.editForm.patchValue(value[0]);
+          this.editForm.patchValue(formattedTrip);
 
-          // Set status message based on retrieval result
-          if (!value) {
-            this.message = 'No Trip Retrieved!';
-          } else {
-            this.message = 'Trip: ' + tripCode + ' retrieved';
-          }
-
+          this.message = 'Trip: ' + tripCode + ' retrieved';
           console.log(this.message);
         },
         error: (error: any) => {
-          // Log backend/API errors
           console.log('Error: ' + error);
+          this.message = 'Error retrieving trip.';
         }
       });
   }
 
   // Executes when user submits the edit form
-  // Sends updated data to backend via PUT request
   public onSubmit(): void {
 
     // Mark form as submitted
@@ -112,6 +123,11 @@ export class EditTripComponent implements OnInit {
         .subscribe({
           next: (value: any) => {
 
+            if (!value) {
+              this.message = 'Update failed.';
+              return;
+            }
+
             console.log(value);
 
             // After successful update, navigate back to main admin page
@@ -119,6 +135,7 @@ export class EditTripComponent implements OnInit {
           },
           error: (error: any) => {
             console.log('Error: ' + error);
+            this.message = 'Error updating trip.';
           }
         });
     }

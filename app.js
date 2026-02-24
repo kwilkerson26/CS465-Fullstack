@@ -1,57 +1,74 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
+require('dotenv').config(); 
+
+const createError = require('http-errors');
+const express = require('express');
+const path = require('path');
+const cookieParser = require('cookie-parser');
+const logger = require('morgan');
+const passport = require('passport');
 
 // Routers
-var indexRouter = require('./app_server/routes/index');
-var usersRouter = require('./app_server/routes/users');
-var travelRouter = require('./app_server/routes/travel');
-var apiRouter = require('./app_api/routes/index');
+const indexRouter = require('./app_server/routes/index');
+const usersRouter = require('./app_server/routes/users');
+const travelRouter = require('./app_server/routes/travel');
+const apiRouter = require('./app_api/routes/index');
 
-var handlebars = require('hbs');
+// Passport configuration
+require('./app_api/config/passport');
 
-// Database
+// Database connection
 require('./app_api/models/db');
 
-var app = express();
+const hbs = require('hbs');
+const app = express();
 
-// view engine setup
+
+// View engine setup
 app.set('views', path.join(__dirname, 'app_server', 'views'));
-handlebars.registerPartials(path.join(__dirname, 'app_server/views/partials'));
+hbs.registerPartials(path.join(__dirname, 'app_server/views/partials'));
 app.set('view engine', 'hbs');
+
 
 // Middleware
 app.use(logger('dev'));
-app.use(express.json());                         // parse JSON bodies
-app.use(express.urlencoded({ extended: true })); // parse x-www-form-urlencoded
+app.use(express.json());                         // Parse JSON bodies
+app.use(express.urlencoded({ extended: true })); // Parse x-www-form-urlencoded
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(passport.initialize());
 
-// Enable CORS globally (applies to all routes)
+
+// CORS setup for Angular frontend
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'http://localhost:4200');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  res.header('Access-Control-Allow-Origin', 'http://localhost:4200'); // Frontend URL
+  res.header(
+    'Access-Control-Allow-Headers',
+    'Origin, X-Requested-With, Content-Type, Accept, Authorization'
+  );
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   next();
 });
 
-// Wire-up routers
+
+// Routes
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/travel', travelRouter);
-app.use('/api', apiRouter); // API routes mounted here
+app.use('/api', apiRouter); 
 
-// Catch 404 and return JSON for API requests
+
+// 404 handler
 app.use((req, res, next) => {
   res.status(404).json({ message: 'Not Found' });
 });
 
-// Error handler (return JSON)
+
+// General error handler
 app.use((err, req, res, next) => {
-  res.status(err.status || 500);
-  res.json({
+  if (err.name === 'UnauthorizedError') {
+    return res.status(401).json({ message: `${err.name}: ${err.message}` });
+  }
+  res.status(err.status || 500).json({
     message: err.message,
     error: req.app.get('env') === 'development' ? err : {}
   });

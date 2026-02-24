@@ -3,7 +3,8 @@ import { AuthResponse } from '../models/auth-response';
 import { BROWSER_STORAGE } from '../storage';
 import { Inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 import { Trip } from '../models/trip';
 
@@ -13,56 +14,74 @@ import { Trip } from '../models/trip';
 export class TripDataService {
 
   // Base API URL 
-  baseUrl = 'http://localhost:3000/api';
-
-  // Existing trips endpoint
-  url = this.baseUrl + '/trips';
+  private readonly tripsApi = 'http://localhost:3000/api/trips';
+  private readonly apiBase = 'http://localhost:3000/api';
 
   constructor(
     private http: HttpClient,
     @Inject(BROWSER_STORAGE) private storage: Storage
   ) {}
 
+  // Get all trips
   getTrips(): Observable<Trip[]> {
-    // console.log('Inside TripDataService::getTrips');
-    return this.http.get<Trip[]>(this.url);
+    return this.http.get<Trip[]>(this.tripsApi)
+      .pipe(
+        catchError(err => {
+          console.error('Error loading trips', err);
+          return of([]); // fallback empty array
+        })
+      );
   }
 
-  addTrip(formData: Trip): Observable<Trip> {
-    // console.log('Inside TripDataService::addTrip');
-    return this.http.post<Trip>(this.url, formData);
+  // Add a new trip
+  addTrip(formData: Trip): Observable<Trip | null> {
+    return this.http.post<Trip>(this.tripsApi, formData)
+      .pipe(
+        catchError(err => {
+          console.error('Error adding trip', err);
+          return of(null); // fallback null
+        })
+      );
   }
 
-  getTrip(tripCode: string): Observable<Trip[]> {
-    // console.log('Inside TripDataService::getTrip');
-    return this.http.get<Trip[]>(this.url + '/' + tripCode);
+  // Get a single trip
+  getTrip(tripCode: string): Observable<Trip | null> {
+    return this.http.get<Trip>(`${this.tripsApi}/${tripCode}`)
+      .pipe(
+        catchError(err => {
+          console.error(`Error loading trip ${tripCode}`, err);
+          return of(null);
+        })
+      );
   }
 
-  updateTrip(formData: Trip): Observable<Trip> {
-    // console.log('Inside TripDataService::updateTrip');
-    return this.http.put<Trip>(this.url + '/' + formData.code, formData);
+  // Update a trip
+  updateTrip(formData: Trip): Observable<Trip | null> {
+    return this.http.put<Trip>(`${this.tripsApi}/${formData.code}`, formData)
+      .pipe(
+        catchError(err => {
+          console.error(`Error updating trip ${formData.code}`, err);
+          return of(null);
+        })
+      );
   }
 
   // Call to /login endpoint, returns JWT
-  login(user: User, passwd: string): Observable<AuthResponse> {
-    // console.log('Inside TripDataService::login');
+  login(user: User, passwd: string): Observable<AuthResponse | null> {
     return this.handleAuthAPICall('login', user, passwd);
   }
 
   // Call to /register endpoint, creates user and returns JWT
-  register(user: User, passwd: string): Observable<AuthResponse> {
-    // console.log('Inside TripDataService::register');
+  register(user: User, passwd: string): Observable<AuthResponse | null> {
     return this.handleAuthAPICall('register', user, passwd);
   }
 
-  // helper method to process both login and register methods
-  handleAuthAPICall(
+  // Helper method for login/register
+  private handleAuthAPICall(
     endpoint: string,
     user: User,
     passwd: string
-  ): Observable<AuthResponse> {
-
-    // console.log('Inside TripDataService::handleAuthAPICall');
+  ): Observable<AuthResponse | null> {
 
     const formData = {
       name: user.name,
@@ -71,8 +90,13 @@ export class TripDataService {
     };
 
     return this.http.post<AuthResponse>(
-      this.baseUrl + '/' + endpoint,
+      `${this.apiBase}/${endpoint}`,
       formData
+    ).pipe(
+      catchError(err => {
+        console.error(`Error on ${endpoint}`, err);
+        return of(null); // fallback null
+      })
     );
   }
 }

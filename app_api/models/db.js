@@ -1,13 +1,15 @@
 const mongoose = require('mongoose');
 const readline = require('readline');
+require('dotenv').config();
 
 const host = process.env.DB_HOST || '127.0.0.1';
-const dbURI = `mongodb://${host}/travlr`;
+const dbName = 'travlr';
+const dbURI = `mongodb://${host}:27017/${dbName}`;
 
 // Connect to MongoDB
 const connect = async () => {
   try {
-    await mongoose.connect(dbURI);
+    await mongoose.connect(dbURI); // no options needed in Mongoose 7+
     console.log(`Mongoose connected to ${dbURI}`);
   } catch (err) {
     console.error('Mongoose connection error:', err);
@@ -48,10 +50,9 @@ process.on('SIGINT', () => {
   process.exit(0);
 });
 
-// Shutdown invoked by container termination
 process.on('SIGTERM', () => {
-    gracefulShutdown('app shutdown');
-    process.exit(0);
+  gracefulShutdown('app shutdown');
+  process.exit(0);
 });
 
 // Start connection immediately
