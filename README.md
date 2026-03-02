@@ -14,7 +14,7 @@ MongoDB was used because its document based structure aligns naturally with Java
 
 How is JSON different from Javascript and how does JSON tie together the frontend and backend development pieces?
 
-JSON is a data format used to transmit structured data, while JavaScript is a programming language used to implement logic and behavior. In this project, the Express back end returned data in JSON format, and the Angular frontend used that JSON data to dynamically render content. JSON acts as the communication bridge between the client and server layers.
+JSON is a data format used to transmit structured data, while JavaScript is a programming language used to implement logic and behavior. In this project, the Express backend returned data in JSON format, and the Angular frontend used that JSON data to dynamically render content. JSON acts as the communication bridge between the client and server layers.
 
 Provide instances in the full stack process when you refactored code to improve functionality and efficiencies, and name the benefits that come from reusable user interface (UI) components.
 
