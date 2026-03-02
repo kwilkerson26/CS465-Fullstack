@@ -4,7 +4,7 @@
 
 Compare and contrast the types of frontend development you used in your full stack project, including Express HTML, JavaScript, and the single-page application (SPA).
 
-The Express HTML implementation followed a traditional server rendered model where each request returned a fully refreshed page. JavaScrip enhanced interactivity but still relied on server round trips. On the other hand, the Angular SPA dynamically updated content without reloading the entire page, providing a more responsive user experience through client-side routing and API integration.
+The Express HTML implementation followed a traditional server rendered model where each request returned a fully refreshed page. JavaScript enhanced interactivity but still relied on server round trips. On the other hand, the Angular SPA dynamically updated content without reloading the entire page, providing a more responsive user experience through client-side routing and API integration.
 
 Why did the backend use a NoSQL MongoDB database?
 
