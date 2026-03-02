@@ -30,5 +30,5 @@ HTTP methods such as GET, POST, PUT, and DELETE define how clients interact with
 
 How has this course helped you in reaching your professional goals? What skills have you learned, developed, or mastered in this course to help you become a more marketable candidate in your career field?
 
-This course strengthend my full stack development skills by giving me hands-on experience with RESTful APIs, Angular SPAs, authentication, and database integration. I developed stronger debugging, architectural design, and security implementation skills. These experiences have improved my skill set for roles in game development and cybersecurity. 
+This course strengthened my full stack development skills by giving me hands-on experience with RESTful APIs, Angular SPAs, authentication, and database integration. I developed stronger debugging, architectural design, and security implementation skills. These experiences have improved my skill set for roles in game development and cybersecurity. 
 
