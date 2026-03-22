@@ -1,4 +1,4 @@
-# CS465-Fullstack
+# CS465-Fullstack-Development-I
 
 **Architecture**
 
